@@ -6,394 +6,670 @@
     <title>지금 병원</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <!-- 카카오 지도 API -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=c82baf058e429cd3cb706224f8643223&libraries=services&autoload=false"></script>
-    
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; outline: none; }
-        body { font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; padding: 0; background: #ffffff; overflow: hidden; user-select: none; width: 100vw; height: 100vh; }
+        body { font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; padding: 0; background: #fff; overflow: hidden; user-select: none; width: 100vw; height: 100vh; }
 
         :root {
-            --toss-blue: #3182F6;
-            --toss-gray-900: #191F28;
-            --toss-gray-600: #6B7684;
-            --toss-gray-400: #9EA7AD;
-            --toss-gray-100: #F2F4F6;
-            --toss-red: #F04452;
+            --blue: #3182F6;
+            --blue-light: #EFF6FF;
+            --gray-900: #191F28;
+            --gray-700: #33404E;
+            --gray-500: #6B7684;
+            --gray-300: #B0B8C1;
+            --gray-100: #F2F4F6;
+            --red: #F04452;
+            --red-light: #FFF0F0;
+            --pink: #FF6B9D;
+            --pink-light: #FFF0F6;
+            --green: #05C072;
+            --header-h: 116px;
         }
 
-        #map { position: absolute; top: 112px; left: 0; width: 100%; height: calc(100% - 112px); z-index: 1; background-color: #f5f5f7; }
-        
-        #mapFallback {
-            position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; z-index: 0; color: #9EA7AD; font-size: 14px; width: 80%;
-        }
-
+        /* 헤더 */
         #appHeader {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(15px);
-            padding: 12px 20px 12px; border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .header-top {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 20px 10px;
+        }
+        .header-logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon {
+            width: 36px; height: 36px; background: var(--red); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .header-title { font-size: 18px; font-weight: 900; color: var(--gray-900); line-height: 1; }
+        .header-status { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-top: 3px; }
+        .header-actions { display: flex; gap: 8px; }
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 12px; background: var(--gray-100);
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; position: relative;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+        .fav-badge {
+            position: absolute; top: -4px; right: -4px; width: 16px; height: 16px;
+            background: var(--red); border-radius: 50%; font-size: 9px; font-weight: 900;
+            color: white; display: none; align-items: center; justify-content: center;
+            border: 2px solid white;
+        }
+        .fav-badge.show { display: flex; }
+
+        /* 필터 칩 */
+        #filterBar {
+            display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+            scrollbar-width: none;
+        }
+        #filterBar::-webkit-scrollbar { display: none; }
+        .chip {
+            padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 700;
+            background: white; border: 1.5px solid var(--gray-100); white-space: nowrap;
+            cursor: pointer; transition: all 0.18s; color: var(--gray-700); flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .chip.active { background: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 2px 8px rgba(49,130,246,0.3); }
+        .chip.active-pedi { background: var(--pink); color: white; border-color: var(--pink); box-shadow: 0 2px 8px rgba(255,107,157,0.3); }
+
+        /* 지도 */
+        #map {
+            position: fixed; top: var(--header-h); left: 0; right: 0;
+            height: calc(100vh - var(--header-h)); z-index: 1;
+        }
+        #mapPlaceholder {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 12px;
+            background: var(--gray-100); color: var(--gray-500);
         }
 
-        #symptomBar {
-            position: fixed; top: 60px; left: 0; right: 0; z-index: 90;
-            display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 12px 20px;
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0,0,0,0.03);
-            justify-content: space-between;
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        .symptom-chip {
-            padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 700;
-            background: white; border: 1px solid var(--toss-gray-100);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); white-space: nowrap; flex-shrink: 0;
-            cursor: pointer; transition: all 0.2s; color: var(--toss-gray-900);
-        }
-        .symptom-chip.active { background: var(--toss-blue); color: white; border-color: var(--toss-blue); }
-
-        #bottomSheet, #listPanel {
-            position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
-            background: white; border-radius: 28px 28px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.12);
-            transform: translateY(101%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        #bottomSheet.open, #listPanel.open { transform: translateY(0); }
-
+        /* 마커 */
         .hosp-marker {
-            padding: 6px 12px; background: var(--toss-blue); border-radius: 12px;
-            color: white; font-weight: 800; font-size: 13px; border: 2px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: relative; white-space: nowrap;
-            cursor: pointer;
+            padding: 5px 11px; background: var(--blue); border-radius: 10px;
+            color: white; font-weight: 800; font-size: 12px; border: 2px solid white;
+            box-shadow: 0 3px 10px rgba(49,130,246,0.35); position: relative;
+            white-space: nowrap; cursor: pointer; transition: transform 0.1s;
         }
+        .hosp-marker:active { transform: scale(0.95); }
         .hosp-marker::after {
             content: ''; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
-            border-top: 7px solid var(--toss-blue); border-left: 5px solid transparent; border-right: 5px solid transparent;
+            border-top: 7px solid var(--blue); border-left: 5px solid transparent; border-right: 5px solid transparent;
         }
-        .hosp-marker.red { background: var(--toss-red); }
-        .hosp-marker.red::after { border-top-color: var(--toss-red); }
-        
+        .hosp-marker.full { background: var(--red); box-shadow: 0 3px 10px rgba(240,68,82,0.35); }
+        .hosp-marker.full::after { border-top-color: var(--red); }
+        .hosp-marker.faved { border-color: gold; }
+
+        /* 현재위치 버튼 */
         #myLocBtn {
-            position: fixed; right: 20px; bottom: 100px; z-index: 500;
-            width: 48px; height: 48px; border-radius: 50%;
-            background: white; border: none; cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s;
+            position: fixed; right: 16px; bottom: 110px; z-index: 100;
+            width: 46px; height: 46px; border-radius: 50%; background: white; border: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.16); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.15s;
         }
-        #myLocBtn:active { transform: scale(0.92); background: #f0f4ff; }
+        #myLocBtn:active { transform: scale(0.9); }
         #myLocBtn.loading svg { animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* 목록보기 버튼 */
         #listBtn {
-            position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 500;
-            background: var(--toss-gray-900); color: white; padding: 14px 28px; border-radius: 100px;
-            font-weight: 800; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%); z-index: 100;
+            background: var(--gray-900); color: white; padding: 13px 26px; border-radius: 100px;
+            font-weight: 800; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.22);
             display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;
+            white-space: nowrap;
         }
 
-        #initialModal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5); z-index: 9999;
+        /* 바텀시트 공통 */
+        .bottom-panel {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+            background: white; border-radius: 24px 24px 0 0;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
+            transform: translateY(101%); transition: transform 0.38s cubic-bezier(0.2,0.85,0.2,1);
+        }
+        .bottom-panel.open { transform: translateY(0); }
+        .panel-handle {
+            width: 36px; height: 4px; background: var(--gray-100); border-radius: 2px;
+            margin: 12px auto 0;
+        }
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px 12px;
+        }
+        .panel-title { font-size: 18px; font-weight: 900; color: var(--gray-900); }
+        .close-btn {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--gray-100);
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 상세 바텀시트 */
+        #detailSheet { max-height: 80vh; overflow-y: auto; }
+        .detail-body { padding: 0 20px 40px; }
+        .detail-name { font-size: 22px; font-weight: 900; color: var(--gray-900); line-height: 1.3; }
+        .detail-sub { font-size: 13px; color: var(--gray-500); font-weight: 500; margin-top: 4px; }
+        .bed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+        .bed-card {
+            padding: 18px; border-radius: 20px; text-align: center;
+        }
+        .bed-card.general { background: var(--blue-light); }
+        .bed-card.pedi { background: var(--pink-light); }
+        .bed-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .bed-card.general .bed-label { color: var(--blue); }
+        .bed-card.pedi .bed-label { color: var(--pink); }
+        .bed-count { font-size: 32px; font-weight: 900; color: var(--gray-900); line-height: 1; }
+        .bed-unit { font-size: 12px; color: var(--gray-300); margin-left: 3px; }
+        .action-row { display: flex; gap: 10px; }
+        .action-btn {
+            flex: 1; padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+            font-weight: 800; font-size: 14px; transition: all 0.15s; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .action-btn:active { transform: scale(0.97); }
+        .btn-call { background: var(--blue-light); color: var(--blue); }
+        .btn-nav { background: var(--gray-900); color: white; flex: 2; }
+        .btn-fav { background: var(--gray-100); color: var(--gray-700); flex: 0.8; }
+        .btn-fav.active { background: #FFF8E1; color: #F59E0B; }
+
+        /* 목록 패널 */
+        #listPanel { height: 85vh; display: flex; flex-direction: column; }
+        #listView { flex: 1; overflow-y: auto; padding: 8px 16px 24px; background: var(--gray-100); }
+        .list-item {
+            background: white; border-radius: 20px; padding: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; cursor: pointer; transition: transform 0.15s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .list-item:active { transform: scale(0.98); }
+        .list-name { font-size: 15px; font-weight: 800; color: var(--gray-900); }
+        .list-sub { font-size: 11px; color: var(--gray-300); font-weight: 500; margin-top: 3px; }
+        .list-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+        .tag {
+            font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+        }
+        .tag-pedi { background: var(--pink-light); color: var(--pink); }
+        .tag-fav { background: #FFF8E1; color: #F59E0B; }
+        .list-beds { text-align: right; flex-shrink: 0; }
+        .list-beds-label { font-size: 9px; color: var(--gray-300); font-weight: 700; margin-bottom: 2px; }
+        .list-beds-count { font-size: 22px; font-weight: 900; }
+        .beds-ok { color: var(--blue); }
+        .beds-full { color: var(--red); }
+
+        /* 즐겨찾기 패널 */
+        #favPanel { height: 75vh; display: flex; flex-direction: column; }
+        #favView { flex: 1; overflow-y: auto; padding: 8px 16px 24px; background: var(--gray-100); }
+        .fav-empty {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 200px; color: var(--gray-300); gap: 12px; font-size: 14px; font-weight: 600;
+        }
+
+        /* 초기 모달 */
+        #initModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            opacity: 1; visibility: visible; transition: opacity 0.3s, visibility 0.3s;
+            transition: opacity 0.25s, visibility 0.25s;
         }
-        #initialModal.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-
-        .modal-content {
-            background: white; border-radius: 16px; padding: 32px 24px;
-            width: 90%; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            text-align: center; z-index: 10000;
+        #initModal.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .modal-box {
+            background: white; border-radius: 20px; padding: 28px 24px;
+            width: 88%; max-width: 320px; text-align: center;
         }
-        .modal-title { font-size: 16px; font-weight: 900; color: var(--toss-gray-900); margin-bottom: 16px; line-height: 1.4; }
-        .modal-desc { font-size: 13px; font-weight: 400; color: var(--toss-gray-600); line-height: 1.7; margin-bottom: 24px; word-break: keep-all; overflow-wrap: break-word; }
-        .modal-btn { background: var(--toss-blue); color: white; border: none; padding: 14px 40px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; width: 100%; transition: all 0.2s; }
-        .modal-btn:active { transform: scale(0.98); opacity: 0.9; }
+        .modal-icon { font-size: 36px; margin-bottom: 12px; }
+        .modal-title { font-size: 16px; font-weight: 900; color: var(--gray-900); margin-bottom: 10px; line-height: 1.4; }
+        .modal-desc { font-size: 13px; color: var(--gray-500); line-height: 1.7; margin-bottom: 22px; word-break: keep-all; }
+        .modal-source { font-size: 11px; color: var(--gray-300); font-weight: 600; margin-top: 8px; }
+        .modal-confirm {
+            background: var(--blue); color: white; border: none; width: 100%;
+            padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;
+        }
 
-        #filterChips { display: flex; gap: 8px; overflow-x: auto; flex-shrink: 1; }
+        /* 내 위치 마커 */
+        .my-dot {
+            width: 14px; height: 14px; background: var(--blue); border: 3px solid white;
+            border-radius: 50%; box-shadow: 0 0 0 6px rgba(49,130,246,0.18);
+        }
+
+        /* 오버레이 */
+        #overlay {
+            position: fixed; inset: 0; z-index: 250; background: transparent;
+            display: none;
+        }
+        #overlay.show { display: block; }
     </style>
 </head>
 <body>
 
-<div id="initialModal">
-    <div class="modal-content">
-        <div class="modal-title">일부지역은 조회가 되지 않을 수 있습니다.</div>
+<!-- 초기 모달 -->
+<div id="initModal">
+    <div class="modal-box">
+        <div class="modal-icon">🏥</div>
+        <div class="modal-title">일부 지역은 조회가<br>되지 않을 수 있어요</div>
         <div class="modal-desc">
             공공데이터 API 제공 범위에 따라<br>
-            일부 지역은 응급실 정보가<br>
-            제공되지 않을 수 있습니다.<br><br>
-            <strong style="display: block; margin-top: 12px; font-size: 12px; font-weight: 600;">출처 : 공공데이터포털&gt;국립중앙의료원</strong>
+            일부 지역의 응급실 정보가 없을 수 있어요.
+            <div class="modal-source">출처 : 공공데이터포털 · 국립중앙의료원</div>
         </div>
-        <button class="modal-btn" onclick="closeInitialModal()">확인</button>
+        <button class="modal-confirm" onclick="closeModal()">확인</button>
     </div>
 </div>
 
+<!-- 헤더 -->
 <header id="appHeader">
-    <div class="appintos-nav-logo" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="56" height="56" style="display: block;">
-            <rect width="120" height="120" rx="28" fill="#F04452"/>
-            <g stroke="white" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M 20 60 L 32 60 L 38 40 L 44 80 L 50 60 L 120 60"/>
-            </g>
-        </svg>
-    </div>
-    
-    <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
+    <div class="header-top">
+        <div class="header-logo">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
             <div>
-                <h1 class="text-[18px] font-black text-gray-900 leading-none">지금 병원</h1>
-                <p id="statusMsg" role="status" aria-live="polite" class="text-[11px] font-bold text-gray-600 mt-1">실시간 정보를 동기화하고 있어요</p>
+                <div class="header-title">지금 병원</div>
+                <div class="header-status" id="statusMsg">위치를 확인하고 있어요</div>
             </div>
         </div>
-        <button onclick="location.reload()" class="w-9 h-9 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center active:scale-90 transition-all">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </button>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openFav()" title="즐겨찾기">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="fav-badge" id="favBadge">0</div>
+            </button>
+            <button class="icon-btn" onclick="location.reload()" title="새로고침">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+        </div>
+    </div>
+    <div id="filterBar">
+        <button id="chip-all" class="chip active" onclick="setFilter('all')">🏥 전체</button>
+        <button id="chip-pedi" class="chip" onclick="setFilter('pedi')">👶 소아 응급</button>
+        <button id="chip-avail" class="chip" onclick="setFilter('avail')">✅ 여유있음</button>
     </div>
 </header>
 
-<div id="symptomBar" class="no-scrollbar">
-    <div id="filterChips">
-        <button id="filter-all" onclick="setFilter('all')" class="symptom-chip active">🏥 전체</button>
-        <button id="filter-pedi" onclick="setFilter('pedi')" class="symptom-chip">👶 소아 응급</button>
-    </div>
-</div>
-
+<!-- 지도 -->
 <div id="map">
-    <div id="mapFallback">
-        <p class="font-bold text-gray-800">지도를 불러오고 있습니다</p>
-        <p class="text-xs mt-2 leading-relaxed">잠시만 기다려 주세요.</p>
+    <div id="mapPlaceholder">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B0B8C1" stroke-width="1.5"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span style="font-size:13px;font-weight:600;">지도를 불러오는 중...</span>
     </div>
 </div>
 
-<button id="myLocBtn" aria-label="현재 위치로 이동" title="현재 위치로 이동" onclick="moveToMyLocation()">
-    <svg id="myLocIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182F6" stroke-width="2.2" aria-hidden="true">
+<!-- 현재위치 -->
+<button id="myLocBtn" onclick="moveToMyLocation()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182F6" stroke-width="2.2">
         <circle cx="12" cy="12" r="3" fill="#3182F6"/>
         <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
         <circle cx="12" cy="12" r="7"/>
     </svg>
 </button>
 
-<button id="listBtn" aria-label="병원 목록 보기" title="병원 목록 보기" onclick="toggleList(true)">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+<!-- 목록보기 -->
+<button id="listBtn" onclick="openList()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     목록보기
 </button>
 
-<div id="bottomSheet" class="p-6 pb-12">
-    <div class="flex items-center justify-between mb-6">
-        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto"></div>
-        <button onclick="closeSheet()" class="absolute right-6 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center active:scale-90 transition-all">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<!-- 오버레이 -->
+<div id="overlay" onclick="closeAll()"></div>
+
+<!-- 상세 바텀시트 -->
+<div id="detailSheet" class="bottom-panel">
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+        <div></div>
+        <button class="close-btn" onclick="closeDetail()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
     </div>
-    <div id="sheetContent"></div>
+    <div class="detail-body" id="detailBody"></div>
 </div>
 
-<div id="listPanel" class="h-[85vh] flex flex-col">
-    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-        <h2 class="text-xl font-black">내 주변 응급실</h2>
-        <button onclick="toggleList(false)" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center active:scale-90 transition-all"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+<!-- 목록 패널 -->
+<div id="listPanel" class="bottom-panel">
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+        <div class="panel-title" id="listTitle">내 주변 응급실</div>
+        <button class="close-btn" onclick="closeList()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
     </div>
-    <div id="listView" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
+    <div id="listView"></div>
+</div>
+
+<!-- 즐겨찾기 패널 -->
+<div id="favPanel" class="bottom-panel">
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+        <div class="panel-title">⭐ 즐겨찾기</div>
+        <button class="close-btn" onclick="closeFav()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div id="favView"></div>
 </div>
 
 <script>
-    // ✅ 프록시 경유 - CORS 해결
     const API_URL = "/api/hospital";
 
-    let map = null, markers = [], masterHospitals = [], currentHospitals = [];
+    let map = null, markers = [], myOverlay = null;
+    let masterHospitals = [], currentHospitals = [], rtMap = {};
     let centerPos = { lat: 37.5665, lon: 126.9780 };
-    let currentFilter = localStorage.getItem('hospital_filter') || 'all';
+    let currentFilter = localStorage.getItem('hfilter') || 'all';
+    let favorites = JSON.parse(localStorage.getItem('hfavs') || '[]');
 
-    function closeInitialModal() {
-        document.getElementById('initialModal').classList.add('hidden');
+    // 지역명 추출 (시도)
+    function getRegionFromAddr(addr) {
+        if (!addr) return '서울';
+        const regions = ['서울','부산','대구','인천','광주','대전','울산','세종','경기','강원','충북','충남','전북','전남','경북','경남','제주'];
+        for (const r of regions) { if (addr.includes(r)) return r; }
+        return '서울';
+    }
+
+    function closeModal() {
+        document.getElementById('initModal').classList.add('hidden');
     }
 
     function initMap(lat, lon) {
         try {
             const container = document.getElementById('map');
-            const options = { center: new kakao.maps.LatLng(lat, lon), level: 4 };
-            map = new kakao.maps.Map(container, options);
-            document.getElementById('mapFallback').style.display = 'none';
-            
-            new kakao.maps.CustomOverlay({
-                position: new kakao.maps.LatLng(lat, lon),
-                content: '<div style="width:16px;height:16px;background:var(--toss-blue);border:3px solid white;border-radius:50%;box-shadow:0 0 0 8px rgba(49,130,246,0.15);"></div>'
-            }).setMap(map);
-
+            map = new kakao.maps.Map(container, {
+                center: new kakao.maps.LatLng(lat, lon), level: 5
+            });
+            document.getElementById('mapPlaceholder').style.display = 'none';
+            setMyMarker(lat, lon);
             if (currentHospitals.length > 0) renderMarkers();
-        } catch(e) { console.error("지도 생성 실패", e); }
+        } catch(e) { console.error('지도 오류', e); }
     }
 
-    async function loadHospitals() {
+    function setMyMarker(lat, lon) {
+        if (myOverlay) myOverlay.setMap(null);
+        myOverlay = new kakao.maps.CustomOverlay({
+            position: new kakao.maps.LatLng(lat, lon),
+            content: '<div class="my-dot"></div>',
+            zIndex: 10
+        });
+        myOverlay.setMap(map);
+    }
+
+    // 현재 위치 기반으로 시도 자동 감지 후 병원 로딩
+    async function loadHospitals(lat, lon) {
+        document.getElementById('statusMsg').innerText = '주변 응급실을 탐색하고 있어요';
         try {
-            // ✅ serviceKey 제거 - 프록시에서 주입
-            const res = await fetch(`${API_URL}?endpoint=getEgytListInfoInqire&Q0=${encodeURIComponent("서울")}&pageNo=1&numOfRows=100`);
+            // Geocoder로 현재위치 → 시도 추출
+            let regionName = '서울';
+            await new Promise((resolve) => {
+                const geocoder = new kakao.maps.services.Geocoder();
+                geocoder.coord2RegionCode(lon, lat, (result, status) => {
+                    if (status === kakao.maps.services.Status.OK) {
+                        const sido = result.find(r => r.region_type === 'H');
+                        if (sido) regionName = sido.region_1depth_name;
+                    }
+                    resolve();
+                });
+            });
+
+            const res = await fetch(`${API_URL}?endpoint=getEgytListInfoInqire&Q0=${encodeURIComponent(regionName)}&pageNo=1&numOfRows=100`);
             const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
             masterHospitals = Array.from(xml.querySelectorAll("item")).map(i => ({
                 hpid: i.querySelector("hpid")?.textContent,
                 name: i.querySelector("dutyName")?.textContent,
                 addr: i.querySelector("dutyAddr")?.textContent,
                 tel: i.querySelector("dutyTel3")?.textContent || i.querySelector("dutyTel1")?.textContent,
-                lat: parseFloat(i.querySelector("wgs84Lat")?.textContent || i.querySelector("latitude")?.textContent),
-                lon: parseFloat(i.querySelector("wgs84Lon")?.textContent || i.querySelector("longitude")?.textContent)
-            }));
-            console.log("병원 목록 로딩:", masterHospitals.length, "개");
-            fetchData();
-        } catch(e) { 
-            console.error("데이터 로딩 실패", e);
-            document.getElementById('statusMsg').innerText = '데이터를 불러오지 못했어요. 새로고침 해주세요.';
+                lat: parseFloat(i.querySelector("wgs84Lat")?.textContent),
+                lon: parseFloat(i.querySelector("wgs84Lon")?.textContent)
+            })).filter(h => h.lat && h.lon && !isNaN(h.lat));
+
+            console.log(`[${regionName}] 병원 목록:`, masterHospitals.length);
+            await fetchRealtime();
+        } catch(e) {
+            console.error('병원 로딩 실패', e);
+            document.getElementById('statusMsg').innerText = '데이터를 불러오지 못했어요';
         }
     }
 
-    async function fetchData() {
-        const nearby = masterHospitals.map(h => ({ 
-            ...h, 
-            dist: (Math.sqrt(Math.pow(h.lat - centerPos.lat, 2) + Math.pow(h.lon - centerPos.lon, 2)) * 111).toFixed(1)
-        })).filter(h => parseFloat(h.dist) <= 15).sort((a,b) => a.dist - b.dist);
-
+    async function fetchRealtime() {
         try {
-            // ✅ serviceKey 제거 - 프록시에서 주입
             const res = await fetch(`${API_URL}?endpoint=getEmrrmRltmUsefulSckbdInfoInqire&numOfRows=1000`);
             const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
-            const rtMap = {};
+            rtMap = {};
             xml.querySelectorAll("item").forEach(i => {
                 const id = i.querySelector("hpid")?.textContent;
-                if(id) rtMap[id] = { hvec: i.querySelector("hvec")?.textContent || "0", hv28: i.querySelector("hv28")?.textContent || "0" };
+                if (id) rtMap[id] = {
+                    hvec: i.querySelector("hvec")?.textContent || '0',
+                    hv28: i.querySelector("hv28")?.textContent || '0'
+                };
             });
-            currentHospitals = nearby.map(h => ({ ...h, beds: rtMap[h.hpid]?.hvec || '0', pediBeds: rtMap[h.hpid]?.hv28 || '0' }));
-            renderMarkers();
-            renderList();
-            document.getElementById('statusMsg').innerText = `내 주변 ${currentHospitals.length}곳 탐색 완료`;
-        } catch(e) { 
-            currentHospitals = nearby; renderMarkers(); renderList();
-        }
+        } catch(e) { console.warn('실시간 병상 로딩 실패', e); }
+
+        buildCurrentHospitals();
+    }
+
+    function buildCurrentHospitals() {
+        currentHospitals = masterHospitals.map(h => ({
+            ...h,
+            dist: (Math.sqrt(Math.pow(h.lat - centerPos.lat, 2) + Math.pow(h.lon - centerPos.lon, 2)) * 111).toFixed(1),
+            beds: parseInt(rtMap[h.hpid]?.hvec || '0'),
+            pediBeds: parseInt(rtMap[h.hpid]?.hv28 || '0'),
+            faved: favorites.includes(h.hpid)
+        })).sort((a, b) => parseFloat(a.dist) - parseFloat(b.dist));
+
+        renderMarkers();
+        renderList();
+        updateFavBadge();
+        document.getElementById('statusMsg').innerText = `주변 ${currentHospitals.length}곳 탐색 완료`;
+    }
+
+    function getFiltered() {
+        let list = [...currentHospitals];
+        if (currentFilter === 'pedi') list = list.filter(h => h.pediBeds > 0);
+        if (currentFilter === 'avail') list = list.filter(h => h.beds > 0);
+        return list;
     }
 
     function renderMarkers() {
-        if(!map || typeof kakao === 'undefined') return;
+        if (!map) return;
         markers.forEach(m => m.setMap(null)); markers = [];
-        let filtered = currentFilter === 'pedi' ? currentHospitals.filter(h => parseInt(h.pediBeds) > 0) : currentHospitals;
-        filtered.forEach(h => {
-            const b = parseInt(h.beds);
-            const colorClass = b <= 0 ? 'red' : '';
-            const content = `<div class="hosp-marker ${colorClass}" onclick="showDetailById('${h.hpid}')">${b > 0 ? b+'석' : '만석'}</div>`;
-            const overlay = new kakao.maps.CustomOverlay({
+        getFiltered().forEach(h => {
+            const isFull = h.beds <= 0;
+            const isFaved = favorites.includes(h.hpid);
+            const cls = `hosp-marker${isFull ? ' full' : ''}${isFaved ? ' faved' : ''}`;
+            const label = isFull ? '만석' : `${h.beds}석`;
+            const content = `<div class="${cls}" onclick="showDetail('${h.hpid}')">${label}</div>`;
+            const ov = new kakao.maps.CustomOverlay({
                 position: new kakao.maps.LatLng(h.lat, h.lon),
-                content: content, yAnchor: 1.4
+                content, yAnchor: 1.5, zIndex: isFaved ? 5 : 1
             });
-            overlay.setMap(map);
-            markers.push(overlay);
+            ov.setMap(map);
+            markers.push(ov);
         });
     }
 
     function renderList() {
-        const listView = document.getElementById('listView');
-        let filtered = currentFilter === 'pedi' ? currentHospitals.filter(h => parseInt(h.pediBeds) > 0) : currentHospitals;
-        listView.innerHTML = filtered.map(h => `
-            <div onclick='selectHosp("${h.hpid}")' class="p-5 bg-white rounded-3xl border border-gray-100 flex justify-between items-center active:scale-95 transition-transform shadow-sm cursor-pointer mb-1">
-                <div class="flex-1 pr-4 text-left">
-                    <p class="font-black text-[15px] text-gray-900 line-clamp-1">${h.name}</p>
-                    <p class="text-[11px] text-gray-400 mt-1 font-medium">${h.dist}km · ${h.addr}</p>
-                    ${parseInt(h.pediBeds) > 0 ? '<span class="inline-block mt-2 text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded">소아가능</span>' : ''}
+        const view = document.getElementById('listView');
+        const list = getFiltered();
+        document.getElementById('listTitle').innerText = `내 주변 응급실 (${list.length}곳)`;
+        if (list.length === 0) {
+            view.innerHTML = '<div class="fav-empty">😅<span>조건에 맞는 병원이 없어요</span></div>';
+            return;
+        }
+        view.innerHTML = list.map(h => `
+            <div class="list-item" onclick="selectHosp('${h.hpid}')">
+                <div style="flex:1;min-width:0;padding-right:12px;">
+                    <div class="list-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.name}</div>
+                    <div class="list-sub">${h.dist}km · ${h.addr || ''}</div>
+                    <div class="list-tags">
+                        ${h.pediBeds > 0 ? '<span class="tag tag-pedi">👶 소아가능</span>' : ''}
+                        ${h.faved ? '<span class="tag tag-fav">⭐ 즐겨찾기</span>' : ''}
+                    </div>
                 </div>
-                <div class="text-right shrink-0">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">Beds</p>
-                    <p class="text-xl font-black ${parseInt(h.beds) > 0 ? 'text-blue-600' : 'text-red-500'}">${parseInt(h.beds) > 0 ? h.beds : '만석'}</p>
+                <div class="list-beds">
+                    <div class="list-beds-label">BEDS</div>
+                    <div class="list-beds-count ${h.beds > 0 ? 'beds-ok' : 'beds-full'}">${h.beds > 0 ? h.beds : '만석'}</div>
                 </div>
             </div>
         `).join('');
     }
 
-    function showDetailById(hpid) {
+    function showDetail(hpid) {
         const h = currentHospitals.find(x => x.hpid === hpid);
-        if(h) showDetail(h);
+        if (!h) return;
+        const isFaved = favorites.includes(hpid);
+        document.getElementById('detailBody').innerHTML = `
+            <div class="detail-name">${h.name}</div>
+            <div class="detail-sub">${h.dist}km · ${h.addr || ''}</div>
+            <div class="bed-grid">
+                <div class="bed-card general">
+                    <div class="bed-label">일반 응급실</div>
+                    <div class="bed-count">${h.beds}<span class="bed-unit">석</span></div>
+                </div>
+                <div class="bed-card pedi">
+                    <div class="bed-label">소아 응급실</div>
+                    <div class="bed-count">${h.pediBeds}<span class="bed-unit">석</span></div>
+                </div>
+            </div>
+            <div class="action-row">
+                <a href="tel:${h.tel}" class="action-btn btn-call">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.73 9.73 19.79 19.79 0 01.67 1.1 2 2 0 012.66 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.64a16 16 0 006.35 6.35l1-1a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    전화
+                </a>
+                <button class="action-btn btn-fav ${isFaved ? 'active' : ''}" onclick="toggleFav('${hpid}')">
+                    ${isFaved ? '⭐' : '☆'}
+                </button>
+                <button class="action-btn btn-nav" onclick="window.open('https://map.kakao.com/link/to/${encodeURIComponent(h.name)},${h.lat},${h.lon}')">
+                    길찾기 →
+                </button>
+            </div>
+        `;
+        openPanel('detailSheet');
+        if (map) map.panTo(new kakao.maps.LatLng(h.lat, h.lon));
+    }
+
+    function toggleFav(hpid) {
+        const idx = favorites.indexOf(hpid);
+        if (idx === -1) favorites.push(hpid);
+        else favorites.splice(idx, 1);
+        localStorage.setItem('hfavs', JSON.stringify(favorites));
+        buildCurrentHospitals();
+        showDetail(hpid); // 버튼 상태 갱신
+        updateFavBadge();
+    }
+
+    function updateFavBadge() {
+        const badge = document.getElementById('favBadge');
+        if (favorites.length > 0) {
+            badge.innerText = favorites.length;
+            badge.classList.add('show');
+        } else {
+            badge.classList.remove('show');
+        }
+    }
+
+    function renderFavList() {
+        const view = document.getElementById('favView');
+        const favHospitals = currentHospitals.filter(h => favorites.includes(h.hpid));
+        if (favHospitals.length === 0) {
+            view.innerHTML = '<div class="fav-empty">⭐<span>즐겨찾기한 병원이 없어요</span></div>';
+            return;
+        }
+        view.innerHTML = favHospitals.map(h => `
+            <div class="list-item" onclick="selectFromFav('${h.hpid}')">
+                <div style="flex:1;min-width:0;padding-right:12px;">
+                    <div class="list-name">${h.name}</div>
+                    <div class="list-sub">${h.dist}km · ${h.addr || ''}</div>
+                    ${h.pediBeds > 0 ? '<div class="list-tags"><span class="tag tag-pedi">👶 소아가능</span></div>' : ''}
+                </div>
+                <div class="list-beds">
+                    <div class="list-beds-label">BEDS</div>
+                    <div class="list-beds-count ${h.beds > 0 ? 'beds-ok' : 'beds-full'}">${h.beds > 0 ? h.beds : '만석'}</div>
+                </div>
+            </div>
+        `).join('');
     }
 
     function selectHosp(hpid) {
-        const h = currentHospitals.find(x => x.hpid === hpid);
-        toggleList(false);
-        showDetail(h);
+        closeList();
+        setTimeout(() => showDetail(hpid), 100);
     }
 
-    function showDetail(h) {
-        document.getElementById('sheetContent').innerHTML = `
-            <div class="mb-6 text-left">
-                <h2 class="text-2xl font-black text-gray-900 leading-tight">${h.name}</h2>
-                <p class="text-sm text-gray-400 font-medium mt-1">${h.dist}km · ${h.addr}</p>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100 text-center">
-                    <p class="text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-wider">일반 응급실</p>
-                    <p class="text-3xl font-black text-gray-900">${h.beds}<span class="text-sm ml-1 text-gray-400">석</span></p>
-                </div>
-                <div class="bg-pink-50 p-6 rounded-3xl border border-pink-100 text-center">
-                    <p class="text-[11px] font-bold text-pink-600 mb-2 uppercase tracking-wider">소아 응급실</p>
-                    <p class="text-3xl font-black text-gray-900">${h.pediBeds}<span class="text-sm ml-1 text-gray-400">석</span></p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <a href="tel:${h.tel}" class="flex-1 bg-blue-50 text-blue-600 font-bold py-5 rounded-3xl text-center active:scale-95 transition-all no-underline">전화하기</a>
-                <button onclick="window.open('https://map.kakao.com/link/to/${encodeURIComponent(h.name)},${h.lat},${h.lon}')" class="flex-[2] bg-gray-900 text-white font-black py-5 rounded-3xl active:scale-95 transition-all border-none cursor-pointer">길찾기</button>
-            </div>
-        `;
-        document.getElementById('bottomSheet').classList.add('open');
-        if(map && typeof kakao !== 'undefined') map.panTo(new kakao.maps.LatLng(h.lat, h.lon));
+    function selectFromFav(hpid) {
+        closeFav();
+        setTimeout(() => showDetail(hpid), 100);
     }
 
-    function toggleList(show) { document.getElementById('listPanel').classList.toggle('open', show); }
-    function closeSheet() { document.getElementById('bottomSheet').classList.remove('open'); }
-    function setFilter(type) { 
+    function setFilter(type) {
         currentFilter = type;
-        localStorage.setItem('hospital_filter', type);
-        document.querySelectorAll('.symptom-chip').forEach(el => el.classList.remove('active'));
-        document.getElementById('filter-'+type).classList.add('active');
-        renderMarkers(); renderList();
+        localStorage.setItem('hfilter', type);
+        document.querySelectorAll('.chip').forEach(el => {
+            el.classList.remove('active', 'active-pedi');
+        });
+        const chip = document.getElementById('chip-' + type);
+        if (type === 'pedi') chip.classList.add('active-pedi');
+        else chip.classList.add('active');
+        renderMarkers();
+        renderList();
     }
+
+    // 패널 관리
+    function openPanel(id) {
+        closeAll();
+        document.getElementById(id).classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+    }
+    function closeAll() {
+        ['detailSheet','listPanel','favPanel'].forEach(id => {
+            document.getElementById(id).classList.remove('open');
+        });
+        document.getElementById('overlay').classList.remove('show');
+    }
+    function openList() { renderList(); openPanel('listPanel'); }
+    function closeList() { document.getElementById('listPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+    function openFav() { renderFavList(); openPanel('favPanel'); }
+    function closeFav() { document.getElementById('favPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+    function closeDetail() { document.getElementById('detailSheet').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 
     function moveToMyLocation() {
         if (!navigator.geolocation) return;
         const btn = document.getElementById('myLocBtn');
         btn.classList.add('loading');
         navigator.geolocation.getCurrentPosition(
-            (p) => {
+            async (p) => {
                 centerPos = { lat: p.coords.latitude, lon: p.coords.longitude };
-                const pos = new kakao.maps.LatLng(centerPos.lat, centerPos.lon);
-                if (map) map.panTo(pos);
+                if (map) { map.panTo(new kakao.maps.LatLng(centerPos.lat, centerPos.lon)); setMyMarker(centerPos.lat, centerPos.lon); }
                 btn.classList.remove('loading');
-                fetchData();
+                await loadHospitals(centerPos.lat, centerPos.lon);
             },
-            (error) => {
+            () => {
                 btn.classList.remove('loading');
-                if (error.code === error.PERMISSION_DENIED) {
-                    document.getElementById('statusMsg').innerText = '위치 접근이 거부되었어요. 서울 기준 검색 중입니다.';
-                } else {
-                    document.getElementById('statusMsg').innerText = '위치 정보를 가져올 수 없어요. 서울 기준으로 검색합니다.';
-                }
+                document.getElementById('statusMsg').innerText = '위치 접근 거부 · 서울 기준으로 검색 중';
             },
             { timeout: 8000, enableHighAccuracy: true }
         );
     }
 
     window.onload = () => {
-        document.getElementById('filter-'+currentFilter).classList.add('active');
+        // 필터 초기화
+        document.querySelectorAll('.chip').forEach(el => el.classList.remove('active','active-pedi'));
+        const chip = document.getElementById('chip-' + currentFilter);
+        if (currentFilter === 'pedi') chip.classList.add('active-pedi');
+        else chip.classList.add('active');
 
-        const runInit = (p) => {
-            if (p) centerPos = { lat: p.coords.latitude, lon: p.coords.longitude };
-            initMap(centerPos.lat, centerPos.lon);
-            loadHospitals();
-        };
+        updateFavBadge();
 
         kakao.maps.load(() => {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (p) => runInit(p),
-                    () => runInit(),
-                    { timeout: 5000 }
+                    async (p) => {
+                        centerPos = { lat: p.coords.latitude, lon: p.coords.longitude };
+                        initMap(centerPos.lat, centerPos.lon);
+                        await loadHospitals(centerPos.lat, centerPos.lon);
+                    },
+                    async () => {
+                        document.getElementById('statusMsg').innerText = '위치 접근 거부 · 서울 기준';
+                        initMap(centerPos.lat, centerPos.lon);
+                        await loadHospitals(centerPos.lat, centerPos.lon);
+                    },
+                    { timeout: 6000, enableHighAccuracy: true }
                 );
             } else {
-                runInit();
+                initMap(centerPos.lat, centerPos.lon);
+                loadHospitals(centerPos.lat, centerPos.lon);
             }
         });
     };
