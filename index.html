@@ -24,11 +24,9 @@
             --red-light: #FFF0F0;
             --pink: #FF6B9D;
             --pink-light: #FFF0F6;
-            --green: #05C072;
             --header-h: 116px;
         }
 
-        /* 헤더 */
         #appHeader {
             position: fixed; top: 0; left: 0; right: 0; z-index: 200;
             background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
@@ -60,7 +58,6 @@
         }
         .fav-badge.show { display: flex; }
 
-        /* 필터 칩 */
         #filterBar {
             display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
             scrollbar-width: none;
@@ -75,7 +72,6 @@
         .chip.active { background: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 2px 8px rgba(49,130,246,0.3); }
         .chip.active-pedi { background: var(--pink); color: white; border-color: var(--pink); box-shadow: 0 2px 8px rgba(255,107,157,0.3); }
 
-        /* 지도 */
         #map {
             position: fixed; top: var(--header-h); left: 0; right: 0;
             height: calc(100vh - var(--header-h)); z-index: 1;
@@ -86,14 +82,12 @@
             background: var(--gray-100); color: var(--gray-500);
         }
 
-        /* 마커 */
         .hosp-marker {
             padding: 5px 11px; background: var(--blue); border-radius: 10px;
             color: white; font-weight: 800; font-size: 12px; border: 2px solid white;
             box-shadow: 0 3px 10px rgba(49,130,246,0.35); position: relative;
-            white-space: nowrap; cursor: pointer; transition: transform 0.1s;
+            white-space: nowrap; cursor: pointer;
         }
-        .hosp-marker:active { transform: scale(0.95); }
         .hosp-marker::after {
             content: ''; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
             border-top: 7px solid var(--blue); border-left: 5px solid transparent; border-right: 5px solid transparent;
@@ -102,7 +96,6 @@
         .hosp-marker.full::after { border-top-color: var(--red); }
         .hosp-marker.faved { border-color: gold; }
 
-        /* 현재위치 버튼 */
         #myLocBtn {
             position: fixed; right: 16px; bottom: 110px; z-index: 100;
             width: 46px; height: 46px; border-radius: 50%; background: white; border: none;
@@ -113,7 +106,6 @@
         #myLocBtn.loading svg { animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 목록보기 버튼 */
         #listBtn {
             position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%); z-index: 100;
             background: var(--gray-900); color: white; padding: 13px 26px; border-radius: 100px;
@@ -122,7 +114,6 @@
             white-space: nowrap;
         }
 
-        /* 바텀시트 공통 */
         .bottom-panel {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
             background: white; border-radius: 24px 24px 0 0;
@@ -144,15 +135,12 @@
             border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        /* 상세 바텀시트 */
         #detailSheet { max-height: 80vh; overflow-y: auto; }
         .detail-body { padding: 0 20px 40px; }
         .detail-name { font-size: 22px; font-weight: 900; color: var(--gray-900); line-height: 1.3; }
         .detail-sub { font-size: 13px; color: var(--gray-500); font-weight: 500; margin-top: 4px; }
         .bed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-        .bed-card {
-            padding: 18px; border-radius: 20px; text-align: center;
-        }
+        .bed-card { padding: 18px; border-radius: 20px; text-align: center; }
         .bed-card.general { background: var(--blue-light); }
         .bed-card.pedi { background: var(--pink-light); }
         .bed-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; }
@@ -172,7 +160,6 @@
         .btn-fav { background: var(--gray-100); color: var(--gray-700); flex: 0.8; }
         .btn-fav.active { background: #FFF8E1; color: #F59E0B; }
 
-        /* 목록 패널 */
         #listPanel { height: 85vh; display: flex; flex-direction: column; }
         #listView { flex: 1; overflow-y: auto; padding: 8px 16px 24px; background: var(--gray-100); }
         .list-item {
@@ -182,12 +169,10 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
         .list-item:active { transform: scale(0.98); }
-        .list-name { font-size: 15px; font-weight: 800; color: var(--gray-900); }
+        .list-name { font-size: 15px; font-weight: 800; color: var(--gray-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .list-sub { font-size: 11px; color: var(--gray-300); font-weight: 500; margin-top: 3px; }
         .list-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-        .tag {
-            font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
-        }
+        .tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
         .tag-pedi { background: var(--pink-light); color: var(--pink); }
         .tag-fav { background: #FFF8E1; color: #F59E0B; }
         .list-beds { text-align: right; flex-shrink: 0; }
@@ -196,15 +181,13 @@
         .beds-ok { color: var(--blue); }
         .beds-full { color: var(--red); }
 
-        /* 즐겨찾기 패널 */
         #favPanel { height: 75vh; display: flex; flex-direction: column; }
         #favView { flex: 1; overflow-y: auto; padding: 8px 16px 24px; background: var(--gray-100); }
-        .fav-empty {
+        .empty-state {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 200px; color: var(--gray-300); gap: 12px; font-size: 14px; font-weight: 600;
         }
 
-        /* 초기 모달 */
         #initModal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999;
             display: flex; align-items: center; justify-content: center;
@@ -223,38 +206,30 @@
             background: var(--blue); color: white; border: none; width: 100%;
             padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;
         }
-
-        /* 내 위치 마커 */
         .my-dot {
             width: 14px; height: 14px; background: var(--blue); border: 3px solid white;
             border-radius: 50%; box-shadow: 0 0 0 6px rgba(49,130,246,0.18);
         }
-
-        /* 오버레이 */
         #overlay {
-            position: fixed; inset: 0; z-index: 250; background: transparent;
-            display: none;
+            position: fixed; inset: 0; z-index: 250; background: transparent; display: none;
         }
         #overlay.show { display: block; }
     </style>
 </head>
 <body>
 
-<!-- 초기 모달 -->
 <div id="initModal">
     <div class="modal-box">
         <div class="modal-icon">🏥</div>
         <div class="modal-title">일부 지역은 조회가<br>되지 않을 수 있어요</div>
         <div class="modal-desc">
-            공공데이터 API 제공 범위에 따라<br>
-            일부 지역의 응급실 정보가 없을 수 있어요.
+            공공데이터 API 제공 범위에 따라<br>일부 지역의 응급실 정보가 없을 수 있어요.
             <div class="modal-source">출처 : 공공데이터포털 · 국립중앙의료원</div>
         </div>
         <button class="modal-confirm" onclick="closeModal()">확인</button>
     </div>
 </div>
 
-<!-- 헤더 -->
 <header id="appHeader">
     <div class="header-top">
         <div class="header-logo">
@@ -283,15 +258,13 @@
     </div>
 </header>
 
-<!-- 지도 -->
 <div id="map">
     <div id="mapPlaceholder">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B0B8C1" stroke-width="1.5"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span style="font-size:13px;font-weight:600;">지도를 불러오는 중...</span>
+        <span style="font-size:13px;font-weight:600;color:#B0B8C1;">지도를 불러오는 중...</span>
     </div>
 </div>
 
-<!-- 현재위치 -->
 <button id="myLocBtn" onclick="moveToMyLocation()">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182F6" stroke-width="2.2">
         <circle cx="12" cy="12" r="3" fill="#3182F6"/>
@@ -300,16 +273,13 @@
     </svg>
 </button>
 
-<!-- 목록보기 -->
 <button id="listBtn" onclick="openList()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     목록보기
 </button>
 
-<!-- 오버레이 -->
 <div id="overlay" onclick="closeAll()"></div>
 
-<!-- 상세 바텀시트 -->
 <div id="detailSheet" class="bottom-panel">
     <div class="panel-handle"></div>
     <div class="panel-header">
@@ -321,7 +291,6 @@
     <div class="detail-body" id="detailBody"></div>
 </div>
 
-<!-- 목록 패널 -->
 <div id="listPanel" class="bottom-panel">
     <div class="panel-handle"></div>
     <div class="panel-header">
@@ -333,7 +302,6 @@
     <div id="listView"></div>
 </div>
 
-<!-- 즐겨찾기 패널 -->
 <div id="favPanel" class="bottom-panel">
     <div class="panel-handle"></div>
     <div class="panel-header">
@@ -354,11 +322,24 @@
     let currentFilter = localStorage.getItem('hfilter') || 'all';
     let favorites = JSON.parse(localStorage.getItem('hfavs') || '[]');
 
-    // 지역명 추출 (시도)
-    function getRegionFromAddr(addr) {
-        if (!addr) return '서울';
-        const regions = ['서울','부산','대구','인천','광주','대전','울산','세종','경기','강원','충북','충남','전북','전남','경북','경남','제주'];
-        for (const r of regions) { if (addr.includes(r)) return r; }
+    // 좌표로 시도 직접 계산 (API 호출 없음)
+    function getRegionByCoord(lat, lon) {
+        if (lat >= 37.4 && lat <= 37.7 && lon >= 126.7 && lon <= 127.3) return '서울';
+        if (lat >= 37.4 && lat <= 37.8 && lon >= 126.3 && lon <= 127.8) return '경기';
+        if (lat >= 35.0 && lat <= 35.3 && lon >= 128.9 && lon <= 129.3) return '부산';
+        if (lat >= 35.8 && lat <= 36.0 && lon >= 128.4 && lon <= 128.8) return '대구';
+        if (lat >= 37.3 && lat <= 37.6 && lon >= 126.3 && lon <= 126.8) return '인천';
+        if (lat >= 35.1 && lat <= 35.2 && lon >= 126.7 && lon <= 126.9) return '광주';
+        if (lat >= 36.3 && lat <= 36.4 && lon >= 127.3 && lon <= 127.5) return '대전';
+        if (lat >= 35.5 && lat <= 35.6 && lon >= 129.2 && lon <= 129.4) return '울산';
+        if (lat >= 36.4 && lat <= 37.2 && lon >= 127.0 && lon <= 128.0) return '충북';
+        if (lat >= 36.0 && lat <= 36.8 && lon >= 126.3 && lon <= 127.3) return '충남';
+        if (lat >= 37.0 && lat <= 38.6 && lon >= 127.5 && lon <= 129.4) return '강원';
+        if (lat >= 35.6 && lat <= 36.7 && lon >= 127.9 && lon <= 129.5) return '경북';
+        if (lat >= 34.8 && lat <= 35.6 && lon >= 127.9 && lon <= 129.0) return '경남';
+        if (lat >= 35.6 && lat <= 35.9 && lon >= 126.4 && lon <= 127.8) return '전북';
+        if (lat >= 34.3 && lat <= 35.5 && lon >= 126.1 && lon <= 127.6) return '전남';
+        if (lat >= 33.1 && lat <= 33.6 && lon >= 126.1 && lon <= 126.9) return '제주';
         return '서울';
     }
 
@@ -374,7 +355,6 @@
             });
             document.getElementById('mapPlaceholder').style.display = 'none';
             setMyMarker(lat, lon);
-            if (currentHospitals.length > 0) renderMarkers();
         } catch(e) { console.error('지도 오류', e); }
     }
 
@@ -388,26 +368,23 @@
         myOverlay.setMap(map);
     }
 
-    // 현재 위치 기반으로 시도 자동 감지 후 병원 로딩
     async function loadHospitals(lat, lon) {
         document.getElementById('statusMsg').innerText = '주변 응급실을 탐색하고 있어요';
-        try {
-            // Geocoder로 현재위치 → 시도 추출
-            let regionName = '서울';
-            await new Promise((resolve) => {
-                const geocoder = new kakao.maps.services.Geocoder();
-                geocoder.coord2RegionCode(lon, lat, (result, status) => {
-                    if (status === kakao.maps.services.Status.OK) {
-                        const sido = result.find(r => r.region_type === 'H');
-                        if (sido) regionName = sido.region_1depth_name;
-                    }
-                    resolve();
-                });
-            });
+        const regionName = getRegionByCoord(lat, lon);
 
-            const res = await fetch(`${API_URL}?endpoint=getEgytListInfoInqire&Q0=${encodeURIComponent(regionName)}&pageNo=1&numOfRows=100`);
-            const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
-            masterHospitals = Array.from(xml.querySelectorAll("item")).map(i => ({
+        try {
+            // 병원목록 + 실시간병상 동시 호출
+            const [listRes, rtRes] = await Promise.all([
+                fetch(`${API_URL}?endpoint=getEgytListInfoInqire&Q0=${encodeURIComponent(regionName)}&pageNo=1&numOfRows=100`),
+                fetch(`${API_URL}?endpoint=getEmrrmRltmUsefulSckbdInfoInqire&numOfRows=1000`)
+            ]);
+
+            const [listXml, rtXml] = await Promise.all([
+                listRes.text().then(t => new DOMParser().parseFromString(t, "text/xml")),
+                rtRes.text().then(t => new DOMParser().parseFromString(t, "text/xml"))
+            ]);
+
+            masterHospitals = Array.from(listXml.querySelectorAll("item")).map(i => ({
                 hpid: i.querySelector("hpid")?.textContent,
                 name: i.querySelector("dutyName")?.textContent,
                 addr: i.querySelector("dutyAddr")?.textContent,
@@ -416,29 +393,21 @@
                 lon: parseFloat(i.querySelector("wgs84Lon")?.textContent)
             })).filter(h => h.lat && h.lon && !isNaN(h.lat));
 
-            console.log(`[${regionName}] 병원 목록:`, masterHospitals.length);
-            await fetchRealtime();
-        } catch(e) {
-            console.error('병원 로딩 실패', e);
-            document.getElementById('statusMsg').innerText = '데이터를 불러오지 못했어요';
-        }
-    }
-
-    async function fetchRealtime() {
-        try {
-            const res = await fetch(`${API_URL}?endpoint=getEmrrmRltmUsefulSckbdInfoInqire&numOfRows=1000`);
-            const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
             rtMap = {};
-            xml.querySelectorAll("item").forEach(i => {
+            rtXml.querySelectorAll("item").forEach(i => {
                 const id = i.querySelector("hpid")?.textContent;
                 if (id) rtMap[id] = {
                     hvec: i.querySelector("hvec")?.textContent || '0',
                     hv28: i.querySelector("hv28")?.textContent || '0'
                 };
             });
-        } catch(e) { console.warn('실시간 병상 로딩 실패', e); }
 
-        buildCurrentHospitals();
+            console.log(`[${regionName}] 병원:`, masterHospitals.length);
+            buildCurrentHospitals();
+        } catch(e) {
+            console.error('로딩 실패', e);
+            document.getElementById('statusMsg').innerText = '데이터를 불러오지 못했어요';
+        }
     }
 
     function buildCurrentHospitals() {
@@ -451,7 +420,6 @@
         })).sort((a, b) => parseFloat(a.dist) - parseFloat(b.dist));
 
         renderMarkers();
-        renderList();
         updateFavBadge();
         document.getElementById('statusMsg').innerText = `주변 ${currentHospitals.length}곳 탐색 완료`;
     }
@@ -486,13 +454,13 @@
         const list = getFiltered();
         document.getElementById('listTitle').innerText = `내 주변 응급실 (${list.length}곳)`;
         if (list.length === 0) {
-            view.innerHTML = '<div class="fav-empty">😅<span>조건에 맞는 병원이 없어요</span></div>';
+            view.innerHTML = '<div class="empty-state">😅<span>조건에 맞는 병원이 없어요</span></div>';
             return;
         }
         view.innerHTML = list.map(h => `
             <div class="list-item" onclick="selectHosp('${h.hpid}')">
                 <div style="flex:1;min-width:0;padding-right:12px;">
-                    <div class="list-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.name}</div>
+                    <div class="list-name">${h.name}</div>
                     <div class="list-sub">${h.dist}km · ${h.addr || ''}</div>
                     <div class="list-tags">
                         ${h.pediBeds > 0 ? '<span class="tag tag-pedi">👶 소아가능</span>' : ''}
@@ -547,8 +515,7 @@
         else favorites.splice(idx, 1);
         localStorage.setItem('hfavs', JSON.stringify(favorites));
         buildCurrentHospitals();
-        showDetail(hpid); // 버튼 상태 갱신
-        updateFavBadge();
+        showDetail(hpid);
     }
 
     function updateFavBadge() {
@@ -565,7 +532,7 @@
         const view = document.getElementById('favView');
         const favHospitals = currentHospitals.filter(h => favorites.includes(h.hpid));
         if (favHospitals.length === 0) {
-            view.innerHTML = '<div class="fav-empty">⭐<span>즐겨찾기한 병원이 없어요</span></div>';
+            view.innerHTML = '<div class="empty-state">⭐<span>즐겨찾기한 병원이 없어요</span></div>';
             return;
         }
         view.innerHTML = favHospitals.map(h => `
@@ -583,42 +550,30 @@
         `).join('');
     }
 
-    function selectHosp(hpid) {
-        closeList();
-        setTimeout(() => showDetail(hpid), 100);
-    }
-
-    function selectFromFav(hpid) {
-        closeFav();
-        setTimeout(() => showDetail(hpid), 100);
-    }
+    function selectHosp(hpid) { closeList(); setTimeout(() => showDetail(hpid), 150); }
+    function selectFromFav(hpid) { closeFav(); setTimeout(() => showDetail(hpid), 150); }
 
     function setFilter(type) {
         currentFilter = type;
         localStorage.setItem('hfilter', type);
-        document.querySelectorAll('.chip').forEach(el => {
-            el.classList.remove('active', 'active-pedi');
-        });
+        document.querySelectorAll('.chip').forEach(el => el.classList.remove('active', 'active-pedi'));
         const chip = document.getElementById('chip-' + type);
         if (type === 'pedi') chip.classList.add('active-pedi');
         else chip.classList.add('active');
         renderMarkers();
-        renderList();
+        if (document.getElementById('listPanel').classList.contains('open')) renderList();
     }
 
-    // 패널 관리
     function openPanel(id) {
         closeAll();
         document.getElementById(id).classList.add('open');
         document.getElementById('overlay').classList.add('show');
     }
     function closeAll() {
-        ['detailSheet','listPanel','favPanel'].forEach(id => {
-            document.getElementById(id).classList.remove('open');
-        });
+        ['detailSheet','listPanel','favPanel'].forEach(id => document.getElementById(id).classList.remove('open'));
         document.getElementById('overlay').classList.remove('show');
     }
-    function openList() { renderList(); openPanel('listPanel'); }
+    function openList() { openPanel('listPanel'); renderList(); }
     function closeList() { document.getElementById('listPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
     function openFav() { renderFavList(); openPanel('favPanel'); }
     function closeFav() { document.getElementById('favPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
@@ -644,12 +599,10 @@
     }
 
     window.onload = () => {
-        // 필터 초기화
         document.querySelectorAll('.chip').forEach(el => el.classList.remove('active','active-pedi'));
         const chip = document.getElementById('chip-' + currentFilter);
         if (currentFilter === 'pedi') chip.classList.add('active-pedi');
         else chip.classList.add('active');
-
         updateFavBadge();
 
         kakao.maps.load(() => {
